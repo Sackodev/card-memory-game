@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap demo</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <div id="cards">
+        <div id="card0-0" class="card back" onclick=""><div class="card-inner"></div></div>
+        <div id="card0-1" class="card back"><div class="card-inner"></div></div>
+        <div id="card0-2" class="card back"><div class="card-inner"></div></div>
+        <div id="card0-3" class="card back"><div class="card-inner"></div></div>
+        <br>
+        <div id="card1-0" class="card back"><div class="card-inner"></div></div>
+        <div id="card1-1" class="card back"><div class="card-inner"></div></div>
+        <div id="card1-2" class="card back"><div class="card-inner"></div></div>
+        <div id="card1-3" class="card back"><div class="card-inner"></div></div>
+        <br>
+        <div id="card2-0" class="card back"><div class="card-inner"></div></div>
+        <div id="card2-1" class="card back"><div class="card-inner"></div></div>
+        <div id="card2-2" class="card back"><div class="card-inner"></div></div>
+        <div id="card2-3" class="card back"><div class="card-inner"></div></div>
+        <br>
+        <div id="card3-0" class="card back"><div class="card-inner"></div></div>
+        <div id="card3-1" class="card back"><div class="card-inner"></div></div>
+        <div id="card3-2" class="card back"><div class="card-inner"></div></div>
+        <div id="card3-3" class="card back"><div class="card-inner"></div></div>
+    </div>
+    <div id="score"></div>
+    <div id="lives"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+<script>
+// gets current resolution; card size and game sized based off of in a 16:9 resolution
+var win_height = $(window).height();
+var win_width = $(window).width();
+var card_height = 0;
+var card_width = 0;
+// score starts at 0; lives can be adjusted
+var score = 0;
+var lives = 5;
+$("#score").html("Score: " + score);
+$("#lives").html("Lives: " + lives);
+
+// counter to keep track of logic based on 1 or 2 cards flipped
+var flip_count = 0;
+
+// array to hold card positions, top left to bottom right
+var card_array = [[0, 0, 1, 1], [2, 2, 3, 3], [4, 4, 5, 5], [6, 6, 7, 7]];
+
+//randomly places cards in each position
+function generate_cards(){
+    var options = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7];
+    row = 0;
+    col = 0;
+    while (options.length > 1){
+        choice = Math.floor(Math.random()*options.length);
+        card_array[row][col] = options[choice];
+        options.splice(choice, 1);
+        col += 1;
+        if (col == 4){
+            col = 0;
+            row += 1;
+        }
+    }
+}
+
+// checks if window size has adjusted
+function check_resolution_change(){
+    if ($(window).height() != win_height || $(window).width() != win_width){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+// flips card up to show picture/number
+function flip_card_to_front(row, col){
+    $("#card" + row + "-" + col).removeClass("back");
+    $("#card" + row + "-" + col).addClass("front");
+    $("#card" + row + "-" + col).find(".card-inner").html(card_array[row][col]);
+}
+// flips card down, hides the picture/number
+function flip_card_to_back(row, col){
+    $("#card" + row + "-" + col).removeClass("front");
+    $("#card" + row + "-" + col).addClass("back");
+    $("#card" + row + "-" + col).find(".card-inner").html("");
+}
+// changes resolution when resolution change detected by check_resolution_change()
+function change_resolution(){
+    win_height = $(window).height();
+    win_width = $(window).width();
+
+    first_card = ["", ""];
+    
+    if (win_height * 1.777 > win_width){
+        $("#game-container").outerHeight(win_width * .5625);
+        $("#game-container").outerWidth(win_width);
+    }
+    else /*(win_width * .5625 > win_height)*/{
+        $("#game-container").outerHeight(win_height);
+        $("#game-container").outerWidth(win_height * 1.777);
+    }
+    card_height = .18 * $("#game-container").outerHeight();
+    card_width = .08 * $("#game-container").outerWidth();
+    card_margin_bottom = Math.round(.02 * $("#game-container").outerHeight() * 10) / 10;
+    card_margin_sides = Math.round(.005 * $("#game-container").outerWidth() * 10) / 10;
+    $('.card').outerHeight(card_height);
+    $('.card').outerWidth(card_width);
+    $('.card').css("margin-bottom", card_margin_bottom);
+    $('.card').css("margin-left", card_margin_sides);
+    $('.card').css("margin-right", card_margin_sides);
+    //$('#game-container').html($("#game-container").height() + "h " + $("#game-container").width() + "w <br>" +
+    //card_height + "ch " + card_width + "cw");
+}
+change_resolution();
+generate_cards();
+
+// checks if resoltion changed; if so, adjusts the game container width/height accordingly
+setInterval(() => {
+    if (check_resolution_change()){
+        change_resolution();
+    }
+}, 333);
+
+
+$(".card").click(function(){
+    // checks if card flip is a valid flip by checking its classes
+    card_id = $(this).attr("id");
+    card_id = card_id.replace(/\D/g, '');
+    row = card_id.charAt(0);
+    col = card_id.charAt(1);
+    card_classes = $(this).attr("class");
+
+    // if not flipped already, flips it over to the front
+    if (card_classes.indexOf("back") > -1){
+        // if no cards flipped yet, just flips the card
+        if (flip_count == 0){
+            flip_count += 1;
+            first_card = [row, col];
+            flip_card_to_front(row, col);
+        }
+        // if the 2nd card is being flipped, checks if match
+        else if (flip_count == 1){
+            flip_count += 1;
+            flip_card_to_front(row, col);
+            var second_card = [row, col];
+            // picked a match
+            if (card_array[first_card[0]][first_card[1]] == card_array[second_card[0]][second_card[1]]){
+                console.log("Match!");
+                alert("Match!");
+                score += 1;
+                $("#score").html("Score: " + score);
+                setTimeout(function(){
+                    flip_count = 0;
+                }, 3000);
+            }
+            // cards didn't match; lives go down 1 or game over
+            else{
+                lives -= 1;
+                // game over at 0 lives
+                if (lives == 0){
+                    $("#lives").html("Lives: " + lives);
+                    console.log("Game over!");
+                    alart("Game over!");
+                }
+                else{
+                    setTimeout(function(){
+                        flip_card_to_back(first_card[0], first_card[1]);
+                        flip_card_to_back(second_card[0], second_card[1]);
+                        flip_count = 0;
+                        $("#lives").html("Lives: " + lives);
+                    }, 3000);
+                }
+            }
+        }
+    }
+});
+
+
+
+// .5625   1.7778
+// width * .5625 > win_height
+// height * 1.777 > win_width
+
+
+//$(function() {
+//    let isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+//    if (isMobile) {
+//        //Conditional script here
+//    }
+// });
+</script>
+</body>
+</html>

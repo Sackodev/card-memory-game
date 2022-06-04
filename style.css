@@ -1,0 +1,44 @@
+#game-container{
+    background: blue;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto;
+    border: 10px solid black;
+    text-align: center;
+}
+#cards{
+    margin-top: 15px;
+}
+.card{
+    display: inline-block;
+    border: 1px solid black;
+    border-radius: 8px;
+    vertical-align: top;
+    text-align: middle;
+    position: relative;
+}
+.back{
+    background: grey;
+    color: white;
+}
+.front{
+    background: white;
+    color: black;
+}
+.card-inner{
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+#score{
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+}
+#lives{
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+}
