@@ -5,6 +5,7 @@ body{
     background: rgb(253, 144, 162);
 }
 #game-container{
+    position: relative;
     background: rgb(253, 144, 162);
     color: white;
     font-weight: bold;
@@ -52,8 +53,15 @@ body{
     display: inline-block;
     margin-right: 30px;
 }
-#lives{
+#timer{
     color: white;
     font-weight: bold;
     display: inline-block;
+}
+#game_footer{
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 auto;
 }

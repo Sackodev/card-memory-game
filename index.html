@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en">
-<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" 
@@ -17,28 +16,11 @@
         Card Game
     </div>
     <div id="cards">
-        <div id="card0-0" class="card back" onclick=""><div class="card-inner"></div></div>
-        <div id="card0-1" class="card back"><div class="card-inner"></div></div>
-        <div id="card0-2" class="card back"><div class="card-inner"></div></div>
-        <div id="card0-3" class="card back"><div class="card-inner"></div></div>
-        <br>
-        <div id="card1-0" class="card back"><div class="card-inner"></div></div>
-        <div id="card1-1" class="card back"><div class="card-inner"></div></div>
-        <div id="card1-2" class="card back"><div class="card-inner"></div></div>
-        <div id="card1-3" class="card back"><div class="card-inner"></div></div>
-        <br>
-        <div id="card2-0" class="card back"><div class="card-inner"></div></div>
-        <div id="card2-1" class="card back"><div class="card-inner"></div></div>
-        <div id="card2-2" class="card back"><div class="card-inner"></div></div>
-        <div id="card2-3" class="card back"><div class="card-inner"></div></div>
-        <br>
-        <div id="card3-0" class="card back"><div class="card-inner"></div></div>
-        <div id="card3-1" class="card back"><div class="card-inner"></div></div>
-        <div id="card3-2" class="card back"><div class="card-inner"></div></div>
-        <div id="card3-3" class="card back"><div class="card-inner"></div></div>
     </div>
-    <div id="score"></div>
-    <div id="lives"></div>
+    <div id="game_footer">
+        <div id="score"></div>
+        <div id="timer"></div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
@@ -53,33 +35,102 @@ var card_width = 0;
 var title_size = 0;
 var title_margin = 0;
 var score_size = 0;
+// card flip delay in ms
+var card_flip_delay = 1000;
 // score starts at 0; lives can be adjusted
 var score = 0;
-var lives = 5;
+var max_score = 0;
+var time_left = 60;
+var difficulty = 0;
 $("#score").html("Score: " + score);
-$("#lives").html("Lives: " + lives);
+$("#timer").html("Time: " + time_left);
 
 // counter to keep track of logic based on 1 or 2 cards flipped
 var flip_count = 0;
+var timer = "";
+var timer_counter = 0;
+
+// starts the game timer; tracks win condition and generates new board on difficulty
+function start_timer(){
+    function time_handler(){
+        // updates timer every .25 seconds to check for win conditions; 4 checks = 1 second
+        if (timer_counter % 4 == 0){
+            time_left -= 1;
+        }
+        timer_counter += 1;
+
+        // if player matched all cards, ups difficulty, creates new board and restarts timer
+        if(score == max_score){
+            alert("WIN!");
+            difficulty += 1;
+            if (difficulty == 0){
+                generate_cards(3, 4);
+            }
+            else if (difficulty == 1){
+                generate_cards(4, 4);
+            }
+            else if (difficulty == 2){
+                generate_cards(4, 5);
+            }
+            else if (difficulty == 3){
+                generate_cards(5, 6);
+            }
+            else{
+                alert("YOU WON THE GAME!");
+            }
+            time_left = 60;
+            timer_counter = 0;
+        }
+        else if (time_left == 0){
+            clearInterval(timer);
+            alert("GAME OVER!");
+            return;
+        }
+    $("#timer").html("Time: " + time_left);
+    }
+    setInterval(time_handler, 250);
+}
+
 
 // array to hold card positions, top left to bottom right
-var card_array = [[9, 9, 9, 9], [9, 9, 9, 9], [9, 9, 9, 9], [9, 9, 9, 9]];
+var card_array = [];
 
-//randomly places cards in each position
-function generate_cards(){
-    var options = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7];
-    row = 0;
-    col = 0;
-    while (options.length > 0){
-        choice = Math.floor(Math.random()*options.length);
-        card_array[row][col] = options[choice];
-        options.splice(choice, 1);
-        col += 1;
-        if (col == 4){
-            col = 0;
-            row += 1;
-        }
-    }
+//creates a game board of given size, then assigns card values to all of them
+//calls resolution_change at end to manage card sizes
+function generate_cards(height, width){
+      var arr = [];
+      var card_html = "";
+
+      // creates empty array of board size
+      for (h = 0; h < height; h++){
+            arr.push(Array.apply(null, Array(width)).map(function () {}));
+      }
+      
+      var total_options = height * width;
+      var options = [];
+
+      // generates possible cards that can be placed on the board
+      for (x = 0; x < total_options; x++){
+            options.push(Math.floor(x / 2));
+      }
+
+      // assigns a card value to all cards, and creates html code for each card
+      for (h = 0; h < height; h++){
+            for (w = 0; w < width; w++){
+                  ind = Math.floor(Math.random() * options.length);
+                  arr[h][w] = options[ind];
+                  options.splice(ind, 1);
+                  card_html = card_html + 
+                  '<div id="card' + h + '-' + w + '" class="card back"><div class="card-inner"></div></div>';
+            }
+            card_html = card_html + '<br>';
+      }
+      $("#cards").html(card_html);
+      card_array = arr;
+
+      // adds to max score the max possible matches for next level
+      max_score = max_score + Math.floor((height * width) / 2);
+      change_resolution();
 }
 
 // checks if window size has adjusted
@@ -123,8 +174,7 @@ function change_resolution(){
         title_size = .08 * $("#game-container").outerHeight();
         title_margin = .04 * $("#game-container").outerHeight();
         score_size = .05 * $("#game-container").outerHeight();
-        card_margin_bottom = Math.round(.02 * $("#game-container").outerHeight() * 10) / 10;
-        card_margin_sides = Math.round(.005 * $("#game-container").outerWidth() * 10) / 10;
+
     }
     // desktop or landscape mode; keeps scaling at 16:9
     else{
@@ -136,22 +186,24 @@ function change_resolution(){
             $("#game-container").outerHeight(win_height);
             $("#game-container").outerWidth(win_height * 1.777);
         }
-        card_height = .17 * $("#game-container").outerHeight();
-        card_width = .08 * $("#game-container").outerWidth();
-        title_size = .08 * $("#game-container").outerHeight();
+
+        card_height = (.72 / card_array.length) * $("#game-container").outerHeight();
+        card_width = (.32 / card_array[0].length) * $("#game-container").outerWidth();
+        title_size = .07 * $("#game-container").outerHeight();
         title_margin = .04 * $("#game-container").outerHeight();
-        score_size = .05 * $("#game-container").outerHeight();
-        card_margin_bottom = Math.round(.02 * $("#game-container").outerHeight() * 10) / 10;
-        card_margin_sides = Math.round(.005 * $("#game-container").outerWidth() * 10) / 10;
+        score_size = .03 * $("#game-container").outerHeight();
     }
+
+    card_margin_bottom = Math.round((.08 / card_array.length) * $("#game-container").outerHeight() * 10) / 10;
+    card_margin_sides = Math.round((.02 / card_array.length) * $("#game-container").outerWidth() * 10) / 10;
     
     $('.title').outerHeight(title_size);
     $('.title').css("font-size", title_size);
     $('.title').css("margin-bottom", title_margin);
     $('#score').outerHeight(score_size);
     $('#score').css("font-size", score_size);
-    $('#lives').outerHeight(score_size);
-    $('#lives').css("font-size", score_size);
+    $('#timer').outerHeight(score_size);
+    $('#timer').css("font-size", score_size);
     $('.card').outerHeight(card_height);
     $('.card').outerWidth(card_width);
     $('.card').find('.card-inner').outerWidth(card_width);
@@ -159,11 +211,10 @@ function change_resolution(){
     $('.card').css("margin-bottom", card_margin_bottom);
     $('.card').css("margin-left", card_margin_sides);
     $('.card').css("margin-right", card_margin_sides);
-    //$('#game-container').html($("#game-container").height() + "h " + $("#game-container").width() + "w <br>" +
-    //card_height + "ch " + card_width + "cw");
 }
-change_resolution();
-generate_cards();
+
+generate_cards(2, 2);
+start_timer();
 
 // checks if resoltion changed; if so, adjusts the game container width/height accordingly
 setInterval(() => {
@@ -172,54 +223,44 @@ setInterval(() => {
     }
 }, 333);
 
+$('#cards').on( 'click', '.card', function(){
+    console.log("Clicked!");
+    if (time_left != 0){
+        // checks if card flip is a valid flip by checking its classes
+        card_id = $(this).attr("id");
+        card_id = card_id.replace(/\D/g, '');
+        row = card_id.charAt(0);
+        col = card_id.charAt(1);
+        card_classes = $(this).attr("class");
 
-$(".card").click(function(){
-    // checks if card flip is a valid flip by checking its classes
-    card_id = $(this).attr("id");
-    card_id = card_id.replace(/\D/g, '');
-    row = card_id.charAt(0);
-    col = card_id.charAt(1);
-    card_classes = $(this).attr("class");
-
-    // if not flipped already, flips it over to the front
-    if (card_classes.indexOf("back") > -1){
-        // if no cards flipped yet, just flips the card
-        if (flip_count == 0){
-            flip_count += 1;
-            first_card = [row, col];
-            flip_card_to_front(row, col);
-        }
-        // if the 2nd card is being flipped, checks if match
-        else if (flip_count == 1){
-            flip_count += 1;
-            flip_card_to_front(row, col);
-            var second_card = [row, col];
-            // picked a match
-            if (card_array[first_card[0]][first_card[1]] == card_array[second_card[0]][second_card[1]]){
-                console.log("Match!");
-                alert("Match!");
-                score += 1;
-                $("#score").html("Score: " + score);
-                setTimeout(function(){
-                    flip_count = 0;
-                }, 3000);
+        // if not flipped already, flips it over to the front
+        if (card_classes.indexOf("back") > -1){
+            // if no cards flipped yet, just flips the card
+            if (flip_count == 0){
+                flip_count += 1;
+                first_card = [row, col];
+                flip_card_to_front(row, col);
             }
-            // cards didn't match; lives go down 1 or game over
-            else{
-                lives -= 1;
-                // game over at 0 lives
-                if (lives == 0){
-                    $("#lives").html("Lives: " + lives);
-                    console.log("Game over!");
-                    alart("Game over!");
+            // if the 2nd card is being flipped, checks if match
+            else if (flip_count == 1){
+                flip_count += 1;
+                flip_card_to_front(row, col);
+                var second_card = [row, col];
+                // picked a match; increases score
+                if (card_array[first_card[0]][first_card[1]] == card_array[second_card[0]][second_card[1]]){
+                    score += 1;
+                    $("#score").html("Score: " + score);
+                    setTimeout(function(){
+                        flip_count = 0;
+                    }, 30);
                 }
+                // cards didn't match
                 else{
                     setTimeout(function(){
                         flip_card_to_back(first_card[0], first_card[1]);
                         flip_card_to_back(second_card[0], second_card[1]);
                         flip_count = 0;
-                        $("#lives").html("Lives: " + lives);
-                    }, 3000);
+                    }, card_flip_delay);
                 }
             }
         }
