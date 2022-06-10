@@ -40,7 +40,7 @@ var card_flip_delay = 1000;
 // score starts at 0; lives can be adjusted
 var score = 0;
 var max_score = 0;
-var time_left = 60;
+var time_left = 5;
 var difficulty = 0;
 $("#score").html("Score: " + score);
 $("#timer").html("Time: " + time_left);
@@ -82,13 +82,13 @@ function start_timer(){
             timer_counter = 0;
         }
         else if (time_left == 0){
-            clearInterval(timer);
             alert("GAME OVER!");
+            clearInterval(timer);
             return;
         }
     $("#timer").html("Time: " + time_left);
     }
-    setInterval(time_handler, 250);
+    timer = setInterval(time_handler, 250);
 }
 
 
